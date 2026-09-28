@@ -62,8 +62,9 @@ class GhostFlight(core.Entity):
             f'{traf.id[acid]}\n'
             f'True:     {traf.lat[acid]:.5f}, {traf.lon[acid]:.5f}\n'
             f'Reported: {self.reported_lat[acid]:.5f}, '
+            f'{self.reported_lon[acid]:.5f}\n',
             f'Suspicion Value: {self.suspicion[acid]:.5f}, '
-            f'{self.reported_lon[acid]:.5f}'
+
     )
 
     @stack.command
