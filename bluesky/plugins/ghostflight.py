@@ -45,6 +45,10 @@ class GhostFlight(core.Entity):
     # called everytime a plane is spawned.
     def create(self, n=1):
         super().create(n)
+
+        if n <= 0:
+            return
+
         self.reported_lat[-n:] = traf.lat[-n:]
         self.reported_lon[-n:] = traf.lon[-n:]
         self.spoof_active[-n:] = False
@@ -62,9 +66,8 @@ class GhostFlight(core.Entity):
             f'{traf.id[acid]}\n'
             f'True:     {traf.lat[acid]:.5f}, {traf.lon[acid]:.5f}\n'
             f'Reported: {self.reported_lat[acid]:.5f}, '
-            f'{self.reported_lon[acid]:.5f}\n',
-            f'Suspicion Value: {self.suspicion[acid]:.5f}, '
-
+            f'{self.reported_lon[acid]:.5f}, \n'
+            f'Suspicion Value: {self.suspicion[acid]:.5f}'
     )
 
     @stack.command
@@ -80,6 +83,7 @@ class GhostFlight(core.Entity):
                 offsetvalue = randint(1,99) * 0.00001
                 self.lat_offset[plane] += offsetvalue
                 self.lon_offset[plane] += offsetvalue
+
             self.reported_lat[plane] = traf.lat[plane] + self.lat_offset[plane]
             self.reported_lon[plane] = traf.lon[plane] + self.lon_offset[plane]
 
@@ -98,7 +102,14 @@ class GhostFlight(core.Entity):
             earth_radius = 6371000.0
             delta_lat = np.degrees(north_dist / earth_radius)
             lat_rad = np.radians(prev_lat)
-            delta_lon = np.degrees(east_dist / (earth_radius * np.cos(lat_rad)))
+
+            cos_lat = np.cos(lat_rad)
+
+            if abs(cos_lat) < 1e-8:
+                delta_lon = 0.0
+            else:
+                delta_lon = np.degrees(east_dist / (earth_radius * cos_lat))
+
             expected_lat = prev_lat + delta_lat
             expected_lon = prev_lon + delta_lon
 
@@ -108,7 +119,7 @@ class GhostFlight(core.Entity):
             lon_error_rad = np.radians(self.reported_lon[plane] - expected_lon)
             north_error = lat_error_rad * earth_radius
 
-            east_error = (lon_error_rad* earth_radius * np.cos(np.radians(expected_lat)))   
+            east_error = (lon_error_rad* earth_radius * np.cos(np.radians(expected_lat)))
 
             position_error = np.sqrt(north_error**2 + east_error**2)
 
@@ -116,11 +127,3 @@ class GhostFlight(core.Entity):
 
             self.prev_reported_lat[plane] = self.reported_lat[plane]
             self.prev_reported_lon[plane] = self.reported_lon[plane]
-
-
-
-
-
-
-
-
